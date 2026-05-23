@@ -1,8 +1,12 @@
 /**
+ * @author Hayden Zhang
+ * Date: 5/23/26
+ * NASA Space Grant Fellowship V.I.S.O.R. Project
  * Terrain classification labels for the MarsTerrain-12k dataset.
  * Each class carries a traversability score (0.0 = impassable, 1.0 = fully safe)
  * and an alert priority used by the path planners costmap generator. 
  */
+
 
 public enum TerrainClass {
 

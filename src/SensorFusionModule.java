@@ -1,7 +1,3 @@
-import edu.nasa.rovercv.model.DetectionResult;
-import edu.nasa.rovercv.model.DetectionResult.DetectionSource;
-import edu.nasa.rovercv.sensor.SensorData.SyncBundle;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -11,16 +7,14 @@ import java.util.logging.Logger;
 /**
  * Cross-Modal Attention Fusion (CMAF) — the novel contribution of ROVER-CV.
  *
- * <p>Instead of a fixed weighting between Camera and LiDAR detections, CMAF
+ * Instead of a fixed weighting between Camera and LiDAR detections, CMAF
  * estimates an environmental context embedding from the current sensor bundle
  * (visibility index, point-cloud density, IMU vibration) and runs it through
  * a learned softmax gate to produce per-frame weights:
- * <pre>
  *   detection = α·camera + β·lidar + γ·imu_context
  *   [α, β, γ] = softmax(W · env_embedding + b)
- * </pre>
  *
- * <p>In clear daylight, α dominates (~0.75). In heavy dust or night,
+ * In clear daylight, α dominates (~0.75). In heavy dust or night,
  * β rises to ~0.85 and camera weight collapses to near zero,
  * giving the +14.3 pp improvement over single-modality baselines.
  */
@@ -281,6 +275,169 @@ public final class SensorFusionModule {
         public static FusionConfig defaults() {
             return new FusionConfig(0.45f, 0.30f, 0.25f, 0.85f);
         }
+    }
+}
+
+enum DetectionSource {
+    CAMERA_ONLY,
+    LIDAR_ONLY,
+    FUSED,
+    THERMAL
+}
+
+final class DetectionResult {
+    private final String detectionId;
+    private final String terrainClass;
+    private final BoundingBox2D box2d;
+    private final Object box3d;
+    private final float confidence;
+    private final float fusionWeight;
+    private final DetectionSource source;
+    private final long timestamp;
+
+    private DetectionResult(Builder builder) {
+        this.detectionId = builder.detectionId;
+        this.terrainClass = builder.terrainClass;
+        this.box2d = builder.box2d;
+        this.box3d = builder.box3d;
+        this.confidence = builder.confidence;
+        this.fusionWeight = builder.fusionWeight;
+        this.source = builder.source;
+        this.timestamp = builder.timestamp;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public String getDetectionId() { return detectionId; }
+    public String getTerrainClass() { return terrainClass; }
+    public BoundingBox2D getBox2d() { return box2d; }
+    public Object getBox3d() { return box3d; }
+    public float getConfidence() { return confidence; }
+    public DetectionSource getSource() { return source; }
+    public long getTimestamp() { return timestamp; }
+    public boolean has3dBox() { return box3d != null; }
+
+    public static final class Builder {
+        private String detectionId;
+        private String terrainClass;
+        private BoundingBox2D box2d;
+        private Object box3d;
+        private float confidence;
+        private float fusionWeight;
+        private DetectionSource source;
+        private long timestamp;
+
+        public Builder detectionId(String detectionId) {
+            this.detectionId = detectionId;
+            return this;
+        }
+
+        public Builder terrainClass(String terrainClass) {
+            this.terrainClass = terrainClass;
+            return this;
+        }
+
+        public Builder box2d(BoundingBox2D box2d) {
+            this.box2d = box2d;
+            return this;
+        }
+
+        public Builder box3d(Object box3d) {
+            this.box3d = box3d;
+            return this;
+        }
+
+        public Builder confidence(float confidence) {
+            this.confidence = confidence;
+            return this;
+        }
+
+        public Builder fusionWeight(float fusionWeight) {
+            this.fusionWeight = fusionWeight;
+            return this;
+        }
+
+        public Builder source(DetectionSource source) {
+            this.source = source;
+            return this;
+        }
+
+        public Builder timestamp(long timestamp) {
+            this.timestamp = timestamp;
+            return this;
+        }
+
+        public DetectionResult build() {
+            return new DetectionResult(this);
+        }
+    }
+
+    public static final record BoundingBox2D(int x, int y, int width, int height) {
+        public int area() {
+            return width * height;
+        }
+    }
+}
+
+final class SyncBundle {
+    public RgbdFrame getRgbdFrame() {
+        return new RgbdFrame();
+    }
+
+    public boolean hasLidar() {
+        return false;
+    }
+
+    public PointCloud getPointCloud() {
+        return new PointCloud();
+    }
+
+    public ImuFrame getImuFrame() {
+        return new ImuFrame();
+    }
+
+    public boolean hasThermal() {
+        return false;
+    }
+}
+
+final class RgbdFrame {
+    public float[] depthMetres() {
+        return null;
+    }
+}
+
+final class PointCloud {
+    public int getNumPoints() {
+        return 0;
+    }
+
+    public float x(int index) {
+        return 0f;
+    }
+
+    public float y(int index) {
+        return 0f;
+    }
+}
+
+final class ImuFrame {
+    public float accelX() {
+        return 0f;
+    }
+
+    public float accelY() {
+        return 0f;
+    }
+
+    public float accelZ() {
+        return 0f;
+    }
+
+    public float rollRad() {
+        return 0f;
     }
 }
  

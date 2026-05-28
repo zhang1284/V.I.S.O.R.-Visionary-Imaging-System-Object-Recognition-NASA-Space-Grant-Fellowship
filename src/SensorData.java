@@ -156,7 +156,9 @@ public final class SensorData {
         }
         /** Pitch in radians derived from quaternion. */
         public double pitchRad() {
-            return Math.asin(Math.clamp(2*(quatW*quatY - quatZ*quatX), -1.0, 1.0));
+            double val = 2*(quatW*quatY - quatZ*quatX);
+            val = Math.max(-1.0, Math.min(1.0, val));
+            return Math.asin(val);
         }
         /** Yaw in radians derived from quaternion. */
         public double yawRad() {

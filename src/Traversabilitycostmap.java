@@ -1,6 +1,3 @@
-import edu.nasa.rovercv.model.DetectionResult;
-import edu.nasa.rovercv.model.TerrainClass;
- 
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -9,15 +6,15 @@ import java.util.Objects;
 /**
  * Occupancy-based traversability costmap in the rover's local ground plane.
  *
- * <p>The map is a 2-D grid centered on the rover. Each cell stores a cost
+ * The map is a 2-D grid centered on the rover. Each cell stores a cost
  * value in [0, 255] where 0 = free / fully traversable and 255 = lethal
  * (must not enter). Costs are inflated around hazards by a Gaussian kernel
  * to provide safety margins.
  *
- * <p>Resolution: 0.10 m / cell (configurable). Default extent: ±10 m
+ * Resolution: 0.10 m / cell (configurable). Default extent: ±10 m
  * ahead, ±5 m laterally → 200 × 100 cells.
  */
-public final class TraversabilityCostmap {
+public final class Traversabilitycostmap {
  
     public static final int COST_FREE   = 0;
     public static final int COST_LETHAL = 255;
@@ -31,7 +28,7 @@ public final class TraversabilityCostmap {
     private final byte[]  costs;         // row-major, unsigned [0,255]
     private final Instant updatedAt;
  
-    private TraversabilityCostmap(Builder b) {
+    private Traversabilitycostmap(Builder b) {
         this.cols        = b.cols;
         this.rows        = b.rows;
         this.resolutionM = b.resolutionM;
@@ -89,7 +86,7 @@ public final class TraversabilityCostmap {
      * @param rows        grid height (y axis, lateral)
      * @param resolution  metres per cell (e.g. 0.10f)
      */
-    public static TraversabilityCostmap fromDetections(
+    public static Traversabilitycostmap fromDetections(
             List<DetectionResult> detections,
             int cols, int rows, float resolution) {
  
@@ -98,9 +95,9 @@ public final class TraversabilityCostmap {
         for (DetectionResult det : detections) {
             if (!det.has3dBox()) continue;
  
-            var box = det.getBox3d();
-            int cc = worldToCellX(box.cx(), cols, resolution);
-            int cr = worldToCellY(box.cy(), rows, resolution);
+            Object box = det.getBox3d();
+            int cc = worldToCellX(getBoxCoordinate(box, "cx"), cols, resolution);
+            int cr = worldToCellY(getBoxCoordinate(box, "cy"), rows, resolution);
  
             float baseCost = terrainCost(det.getTerrainClass()) * det.getConfidence();
             int   baseInt  = Math.round(baseCost * COST_LETHAL);
@@ -116,13 +113,24 @@ public final class TraversabilityCostmap {
                 .build();
     }
  
+    private static double getBoxCoordinate(Object box, String methodName) {
+        try {
+            var method = box.getClass().getMethod(methodName);
+            Object value = method.invoke(box);
+            if (value instanceof Number n) return n.doubleValue();
+            throw new IllegalStateException("Box coordinate " + methodName + " did not return a number");
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Failed to invoke " + methodName + " on box object", e);
+        }
+    }
+ 
     // -- Cost update / merge ----------------------------------------------------
  
     /**
      * Returns a new costmap that is the element-wise maximum of {@code this}
      * and {@code other}, preserving the highest-cost (most conservative) estimate.
      */
-    public TraversabilityCostmap mergeMax(TraversabilityCostmap other) {
+    public Traversabilitycostmap mergeMax(Traversabilitycostmap other) {
         if (cols != other.cols || rows != other.rows)
             throw new IllegalArgumentException("Costmap dimensions must match for merge");
         byte[] merged = new byte[costs.length];
@@ -154,18 +162,39 @@ public final class TraversabilityCostmap {
         }
     }
  
-    private static float terrainCost(TerrainClass tc) {
-        return 1.0f - (float) tc.getTraversabilityScore();
+    private static float terrainCost(String terrainClass) {
+        if (terrainClass == null) return 1.0f;
+        try {
+            TerrainClass tc = TerrainClass.valueOf(terrainClass.toUpperCase());
+            // Map terrain classes to traversability scores in [0,1].
+            // Higher score means more traversable.
+            float score = switch (tc) {
+                case CRATER  -> 0.20f;
+                case ROCK    -> 0.35f;
+                case SLOPE   -> 0.40f;
+                case DEBRIS  -> 0.50f;
+                default      -> 0.75f;
+            };
+            return 1.0f - score;
+        } catch (IllegalArgumentException e) {
+            return 1.0f;
+        }
     }
  
-    private static float inflationRadius(TerrainClass tc) {
+    private static float inflationRadius(String terrainClass) {
+        if (terrainClass == null) return 2.5f;
+        TerrainClass tc;
+        try {
+            tc = TerrainClass.valueOf(terrainClass.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return 2.5f;
+        }
         return switch (tc) {
             case CRATER  -> 2.0f;
             case ROCK    -> 1.2f;
             case SLOPE   -> 1.5f;
             case DEBRIS  -> 1.0f;
-            case UNKNOWN -> 2.5f;
-            default      -> 0.3f;
+            default      -> 2.5f;
         };
     }
  
@@ -202,9 +231,9 @@ public final class TraversabilityCostmap {
         public Builder costs(byte[] c)                { this.costs = c;                     return this; }
         public Builder updatedAt(Instant t)           { this.updatedAt = t;                 return this; }
  
-        public TraversabilityCostmap build() {
+        public Traversabilitycostmap build() {
             if (costs == null) costs = new byte[cols * rows];
-            return new TraversabilityCostmap(this);
+            return new Traversabilitycostmap(this);
         }
     }
 }

@@ -6,7 +6,7 @@ import java.util.Objects;
 /**
  * Occupancy-based traversability costmap in the rover's local ground plane.
  *
- * The map is a 2-D grid centered on the rover. Each cell stores a cost
+ * The map is a 2D grid centered on the rover. Each cell stores a cost
  * value in [0, 255] where 0 = free / fully traversable and 255 = lethal
  * (must not enter). Costs are inflated around hazards by a Gaussian kernel
  * to provide safety margins.

@@ -15,6 +15,7 @@ By leveraging structured, high-performance Java architectures, V.I.S.O.R. addres
 * **Autonomous Object Detection:** Real-time identification, bounding, and tracking of orbital hardware, space debris, and surface features.
 * **Semantic Terrain Segmentation:** Surface-mapping algorithms designed to distinguish complex planetary regolith, craters, and structural hazards to assist autonomous robotic navigation.
 * **Environmental Robustness:** Custom image filtering pipelines engineered to reconstruct signals corrupted by cosmic ray strikes, harsh direct solar illumination, and extreme shadow contrast.
+* This will all tie in to the rover project me (Hayden Zhang) and Ziyad Mohammed will be building at our Robotics Club/Startup at Creighton University
 
 ---
 

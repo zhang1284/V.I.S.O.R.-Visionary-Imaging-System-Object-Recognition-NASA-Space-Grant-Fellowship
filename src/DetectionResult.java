@@ -173,3 +173,4 @@ public final class DetectionResult {
         FUSED
     }
 }
+

@@ -19,19 +19,4 @@ public final class CVPipelineConfig {
     public final float     lidarGroundRemovalHeight; // meters below sensor origin
     public final int       lidarMaxPointsPerSweep; 
 
-    // Constructor to initialize all final variables
-    public CVPipelineConfig(int cameraWidth, int cameraHeight, int cameraFps, 
-                            float stereoBaseLine, Path intrinsicsCalibPath, 
-                            float lidarMinRange, float lidarMaxRange, 
-                            float lidarGroundRemovalHeight, int lidarMaxPointsPerSweep) {
-        this.cameraWidth = cameraWidth;
-        this.cameraHeight = cameraHeight;
-        this.cameraFps = cameraFps;
-        this.stereoBaseLine = stereoBaseLine;
-        this.intrinsicsCalibPath = intrinsicsCalibPath;
-        this.lidarMinRange = lidarMinRange;
-        this.lidarMaxRange = lidarMaxRange;
-        this.lidarGroundRemovalHeight = lidarGroundRemovalHeight;
-        this.lidarMaxPointsPerSweep = lidarMaxPointsPerSweep;
-    }
-} 
+}

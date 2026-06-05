@@ -99,9 +99,11 @@ public final class Traversabilitycostmap {
             int cc = worldToCellX(getBoxCoordinate(box, "cx"), cols, resolution);
             int cr = worldToCellY(getBoxCoordinate(box, "cy"), rows, resolution);
  
-            float baseCost = terrainCost(det.getTerrainClass()) * det.getConfidence();
+            // Detection may expose terrain as an enum; convert to String for helper APIs
+            String terrainName = det.getTerrainClass() != null ? det.getTerrainClass().toString() : null;
+            float baseCost = terrainCost(terrainName) * det.getConfidence();
             int   baseInt  = Math.round(baseCost * COST_LETHAL);
-            float sigma    = inflationRadius(det.getTerrainClass()) / resolution;
+            float sigma    = inflationRadius(terrainName) / resolution;
  
             inflate(costs, cols, rows, cc, cr, baseInt, sigma);
         }
